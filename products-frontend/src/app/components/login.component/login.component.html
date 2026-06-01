@@ -1,0 +1,64 @@
+<!-- src/app/components/login/login.component.html -->
+<!--
+  Plantilla de la página de login.
+  - El formulario envía `onSubmit()` en submit.
+  - Muestra mensaje de error cuando `errorMessage()` contiene texto.
+  - El botón muestra estado de carga mientras espera la respuesta.
+-->
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+  <div class="card shadow border-0" style="width: 100%; max-width: 420px;">
+
+    <div class="card-body p-5">
+      <!-- Encabezado del Portal -->
+      <div class="text-center mb-4">
+        <div class="bg-dark text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+          <span class="fs-3">🔐</span>
+        </div>
+        <h4 class="fw-bold text-dark m-0">Portal Institucional</h4>
+        <small class="text-muted">Gestión de Catálogos</small>
+      </div>
+
+      <!-- Alert para errores del Backend -->
+      @if (errorMessage()) {
+        <div class="alert alert-danger d-flex align-items-center py-2 small" role="alert">
+          <span>⚠️ {{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Formulario Reactivo -->
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+
+        <!-- Input Usuario -->
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Nombre de Usuario</label>
+          <input type="text" class="form-control form-control-lg fs-6" [(ngModel)]="credentials.username" name="username" placeholder="Ej: admin" required #user="ngModel" [class.is-invalid]="user.invalid && user.touched">
+          <div class="invalid-feedback">El usuario es requerido.</div>
+        </div>
+
+        <!-- Input Contraseña -->
+        <div class="mb-4">
+          <label class="form-label small fw-bold text-secondary">Contraseña</label>
+          <input type="password" class="form-control form-control-lg fs-6" [(ngModel)]="credentials.password" name="password" placeholder="••••••••" required #pass="ngModel" [class.is-invalid]="pass.invalid && pass.touched">
+          <div class="invalid-feedback">La contraseña es requerida.</div>
+        </div>
+
+        <!-- Botón de Envío con Estado de Carga -->
+        <button type="submit" class="btn btn-dark btn-lg w-100 fs-6 fw-bold shadow-sm" [disabled]="loginForm.invalid || loading()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Validando...
+          } @else {
+            Ingresar al Sistema
+          }
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Pie de la tarjeta -->
+    <div class="card-footer bg-light text-center py-3 border-0">
+      <span class="text-muted small">Tiempo límite de sesión: 8 horas</span>
+    </div>
+
+  </div>
+</div>

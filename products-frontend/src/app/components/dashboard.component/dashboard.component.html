@@ -1,0 +1,188 @@
+<!-- src/app/components/dashboard/dashboard.component.html -->
+<!--
+  Vista principal del dashboard.
+  - Incluye filtros para búsqueda de productos.
+  - Muestra resultados paginados.
+  - Permite crear/editar productos mediante modal.
+  - Exporta resultados filtrados a Excel.
+-->
+<nav class="navbar navbar-dark bg-dark px-4 mb-4">
+  <span class="navbar-brand mb-0 h1">Sistema de Catálogos Institucionales</span>
+  <button class="btn btn-outline-danger btn-sm" (click)="authService.logout()">Cerrar Sesión</button>
+</nav>
+
+<div class="container-fluid px-4">
+  <!-- 🔍 Sección de Filtros Avanzados -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light fw-bold text-secondary">Filtros de Búsqueda de Productos</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label text-muted small">Nombre del Producto</label>
+          <input type="text" class="form-control" [(ngModel)]="filters.productName" placeholder="Ej: Laptop">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Clave Única</label>
+          <input type="text" class="form-control" [(ngModel)]="filters.productCode" placeholder="Ej: LAP-01">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Precio Mínimo</label>
+          <input type="number" class="form-control" [(ngModel)]="filters.priceMin" placeholder="0.00">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Precio Máximo</label>
+          <input type="number" class="form-control" [(ngModel)]="filters.priceMax" placeholder="9999">
+        </div>
+        <div class="col-md-3 d-flex align-items-end gap-2">
+          <button class="btn btn-primary w-100" (click)="loadProducts(0)">🔍 Buscar</button>
+          <button class="btn btn-secondary w-100" (click)="cleanFilters()">🧹 Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📊 Panel de Operaciones e Inclusión de Datos -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="text-dark">Listado de Registros ({{totalElements()}} encontrados)</h5>
+    <div class="d-flex gap-2">
+      <!-- Botón que activa el modal nativo de Bootstrap usando data-bs-toggle -->
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" (click)="openModalCreate()">
+        ➕ Registrar Nuevo Producto
+      </button>
+      <button class="btn btn-success" (click)="downloadExcelReport()">🟢 Exportar Filtros a Excel</button>
+    </div>
+  </div>
+
+  <div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-striped table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>ID Técnico</th>
+          <th>ID Negocio</th>
+          <th>Clave</th>
+          <th>Nombre del Producto</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          <th>Auditor</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (product of products(); track product.technicalId) {
+        <tr>
+          <td><strong class="text-primary">{{product.technicalId}}</strong></td>
+          <td><span class="badge bg-light text-dark border">{{product.bussinesId}}</span></td>
+          <td><code>{{product.productCode}}</code></td>
+          <td>{{product.productName}}</td>
+          <td>{{product.price | currency:'USD':'symbol':'1.2-2'}}</td>
+          <td>
+            <span class="badge" [ngClass]="product.validityIndicator ? 'bg-success' : 'bg-danger'">
+              {{product.validityIndicator ? 'Vigente' : 'Inactivo'}}
+            </span>
+          </td>
+          <td class="text-muted small">{{product.userAuditor}}</td>
+          <td class="text-center">
+            <!-- Botón de edición por fila -->
+            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#productModal"
+              (click)="openModalUpdate(product)">
+              ✏️ Editar
+            </button>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="8" class="text-center text-muted py-4">Ningún producto coincide con los parámetros de búsqueda
+            colocados.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 🧮 Paginador Dinámico Estilo Native -->
+  @if (totalPages() > 1) {
+  <div class="d-flex justify-content-center mt-3">
+    <nav>
+      <ul class="pagination pagination-sm">
+        <li class="page-item" [class.disabled]="currentPage() === 0">
+          <button class="page-item page-link" (click)="loadProducts(currentPage() - 1)">Anterior</button>
+        </li>
+        <li class="page-item active">
+          <span class="page-link">Página {{currentPage() + 1}} de {{totalPages()}}</span>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage() === totalPages() - 1">
+          <button class="page-item page-link" (click)="loadProducts(currentPage() + 1)">Siguiente</button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  }
+</div>
+
+<div class="modal fade" id="productModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-labelledby="productModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- Encabezado Dinámico -->
+      <div class="modal-header" [ngClass]="isEditionMode() ? 'bg-warning text-dark' : 'bg-primary text-white'">
+        <h5 class="modal-title" id="productoModalLabel">
+          {{ isEditionMode() ? '✏️ Modificar Producto Existente' : '➕ Registrar Catálogo Nuevo' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btnCloseModal"></button>
+      </div>
+
+      <!-- Cuerpo del Formulario -->
+      <div class="modal-body">
+        <form (ngSubmit)="saveProduct()" #prodForm="ngForm">
+
+          <!-- Clave de Producto -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small">Clave del Producto <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="formProduct.productCode" name="productCode"
+              maxLength="10" placeholder="Máx 10 caracteres" required #code="ngModel"
+              [class.is-invalid]="code.invalid && code.touched">
+            <div class="invalid-feedback">La clave es obligatoria.</div>
+          </div>
+
+          <!-- Nombre de Producto -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small">Nombre Completo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="formProduct.productName" name="productName"
+              maxLength="200" placeholder="Ej: Escritorio de Madera" required #name="ngModel"
+              [class.is-invalid]="name.invalid && name.touched">
+            <div class="invalid-feedback">El nombre es obligatorio.</div>
+          </div>
+
+          <!-- Precio -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small">Precio Unitario ($) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" [(ngModel)]="formProduct.price" name="price" min="0" step="0.01"
+              placeholder="0.00" required #price="ngModel"
+              [class.is-invalid]="(price.invalid || (formProduct.price ?? 0) < 0) && price.touched">
+            <div class="invalid-feedback">El precio debe ser un número válido no negativo.</div>
+          </div>
+
+          <!-- Indicador de Vigencia (Checkbox Estilo Switch de Bootstrap) -->
+          <div class="mb-3 form-check form-switch mt-4">
+            <input class="form-check-input" type="checkbox" role="switch" id="validitySwitch"
+              [(ngModel)]="formProduct.validityIndicator" name="validityIndicator">
+            <label class="form-check-label fw-bold small" for="validitySwitch">¿El producto se encuentra vigente /
+              activo?</label>
+          </div>
+
+          <!-- Botones de Acción dentro del Formulario -->
+          <div class="modal-footer px-0 pb-0 mt-4">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn text-white fw-bold"
+              [ngClass]="isEditionMode() ? 'btn-warning text-dark' : 'btn-primary'" [disabled]="prodForm.invalid">
+              💾 Guardar Cambios
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
