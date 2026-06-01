@@ -106,6 +106,10 @@ Asegúrate de que la base de datos `catalog_db` exista y que el usuario tenga pe
 
    - `http://localhost:4200`
 
+   las credenciales para ingresar son: 
+   username: admin
+   password: admin
+
 ## Scripts útiles
 
 ### Backend
@@ -114,20 +118,12 @@ Asegúrate de que la base de datos `catalog_db` exista y que el usuario tenga pe
   ```bash
   ./mvnw clean package
   ```
-- Ejecutar pruebas:
-  ```bash
-  ./mvnw test
-  ```
 
 ### Frontend
 
 - Compilar el proyecto:
   ```bash
   npm run build
-  ```
-- Ejecutar pruebas unitarias:
-  ```bash
-  npm test
   ```
 
 ## Notas adicionales
