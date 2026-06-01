@@ -5,6 +5,30 @@ Este repositorio contiene dos proyectos relacionados:
 - `products/`: backend Spring Boot con API REST, seguridad JWT y acceso a base de datos MariaDB.
 - `products-frontend/`: frontend Angular que consume la API de productos y maneja autenticación.
 
+## Descargar el repositorio
+
+1. Clona el repositorio desde GitHub:
+
+   ```bash
+   git clone https://github.com/IvanReb8/Gestion-de-Productos-Institucionales.git
+   ```
+
+   Si no tienes Git instalado, [descárgalo aquí](https://git-scm.com).
+
+2. Entra en el directorio del repositorio:
+
+   ```bash
+   cd Gestion-de-Productos-Institucionales
+   ```
+
+3. Verifica que ambas carpetas estén presentes:
+
+   ```bash
+   ls -la
+   ```
+
+   Deberías ver las carpetas `products/` y `products-frontend/`.
+
 ## Requisitos previos
 
 - Java 17
@@ -90,12 +114,20 @@ Asegúrate de que la base de datos `catalog_db` exista y que el usuario tenga pe
   ```bash
   ./mvnw clean package
   ```
+- Ejecutar pruebas:
+  ```bash
+  ./mvnw test
+  ```
 
 ### Frontend
 
 - Compilar el proyecto:
   ```bash
   npm run build
+  ```
+- Ejecutar pruebas unitarias:
+  ```bash
+  npm test
   ```
 
 ## Notas adicionales
