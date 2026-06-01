@@ -1,0 +1,389 @@
+{
+  "info": {
+    "_postman_id": "bbd89139-0d23-4239-a2f2-069019960afa",
+    "name": "Prueba Full-Stack - Products",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53004961",
+    "_collection_link": "https://go.postman.co/collection/53004961-bbd89139-0d23-4239-a2f2-069019960afa?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Validar código de estado exitoso\r",
+              "pm.test(\"Estado es 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// Validar estructura básica del JSON\r",
+              "pm.test(\"Retorna estructura con token\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.token).to.be.a('string');\r",
+              "    pm.expect(jsonData.type).to.eql(\"Bearer\");\r",
+              "\r",
+              "    // GUARDADO AUTOMÁTICO: Guarda el token en la variable de la colección\r",
+              "    pm.collectionVariables.set(\"jwt_token\", jsonData.token);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"username\": \"admin\",\r\n  \"password\": \"admin\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Registrar Producto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Producto Creado Correctamente (217)\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Asignó ID Técnico y de Negocio único\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.technicalId).to.be.a('number');\r",
+              "    pm.expect(jsonData.bussinesId).to.include(\"PROD-\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Auditoría extrajo el usuario del JWT\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.userAuditor).to.eql(\"admin\");\r",
+              "\r",
+              "    // Guardamos el ID asignado para poder actualizarlo en la siguiente prueba\r",
+              "    pm.collectionVariables.set(\"ultimo_id_tecnico\", jsonData.technicalId);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"productCode\": \"AUT-TEST\",\r\n  \"productName\": \"Producto de Prueba Automática\",\r\n  \"price\": 450.00,\r\n  \"validityIndicator\": true\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Actualizar Producto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Actualización Exitosa (200 OK)\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Campos cambiaron correctamente\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.productCode).to.eql(\"AUT-EDIT\");\r",
+              "    pm.expect(jsonData.validityIndicator).to.be.false;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"productCode\": \"AUT-EDIT\",\r\n  \"productName\": \"Producto Modificado Automáticamente\",\r\n  \"price\": 500.00,\r\n  \"validityIndicator\": false\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{ultimo_id_tecnico}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{ultimo_id_tecnico}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Búsqueda Avanzada y Paginación",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 1. Validar código de estado HTTP correcto\r",
+              "pm.test(\"Búsqueda Exitosa (200 OK)\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Validar que la respuesta contiene la estructura nativa de Spring Data Page\r",
+              "pm.test(\"Contiene estructura de paginación nativa\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    pm.expect(jsonData).to.have.property('content');\r",
+              "    pm.expect(jsonData).to.have.property('pageable');\r",
+              "    pm.expect(jsonData).to.have.property('totalPages');\r",
+              "    pm.expect(jsonData).to.have.property('totalElements');\r",
+              "    pm.expect(jsonData).to.have.property('size');\r",
+              "    pm.expect(jsonData).to.have.property('number');\r",
+              "});\r",
+              "\r",
+              "// 3. Validar la precisión del filtrado lógico del Backend\r",
+              "pm.test(\"El registro coincide exactamente con los filtros aplicados\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Validamos que al menos devuelva el registro que editamos en el paso anterior\r",
+              "    pm.expect(jsonData.content.length).to.be.above(0);\r",
+              "    \r",
+              "    var firstProduct = jsonData.content[0];\r",
+              "    \r",
+              "    // Verificaciones de coincidencia\r",
+              "    pm.expect(firstProduct.productCode).to.eql(\"AUT-EDIT\");\r",
+              "    pm.expect(firstProduct.productName).to.include(\"Modificado\");\r",
+              "    \r",
+              "    // Verificación de rango de precio (Debe estar entre 100 y 600)\r",
+              "    var price = parseFloat(firstProduct.price);\r",
+              "    pm.expect(price).to.be.at.least(100);\r",
+              "    pm.expect(price).to.be.at.most(600);\r",
+              "});\r",
+              "\r",
+              "// 4. Validar consistencia en los metadatos de la página solicitada\r",
+              "pm.test(\"Metadatos de página coinciden con los parámetros\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    pm.expect(jsonData.size).to.eql(5);   // Tamaño de página solicitado\r",
+              "    pm.expect(jsonData.number).to.eql(0); // Página actual (0 es la primera)\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products?productName=Modificado&productCode=AUT-EDIT&priceMin=100&priceMax=600&page=0&size=5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "productName",
+              "value": "Modificado"
+            },
+            {
+              "key": "productCode",
+              "value": "AUT-EDIT"
+            },
+            {
+              "key": "priceMin",
+              "value": "100"
+            },
+            {
+              "key": "priceMax",
+              "value": "600"
+            },
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05 - Exportar Excel",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Reporte Generado (200 OK)\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"El payload contiene el archivo Base64\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.status).to.eql(200);\r",
+              "    pm.expect(jsonData.fileName).to.eql(\"products_report.xlsx\");\r",
+              "    pm.expect(jsonData.fileBase64).to.be.a('string');\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/export?productName=Producto",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "export"
+          ],
+          "query": [
+            {
+              "key": "productName",
+              "value": "Producto"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    },
+    {
+      "key": "ultimo_id_tecnico",
+      "value": ""
+    }
+  ]
+}
